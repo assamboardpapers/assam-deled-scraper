@@ -14,7 +14,7 @@ soup = BeautifulSoup(res.text, "html.parser")
 
 pages = []
 
-# collect paper links
+# collect paper pages
 for a in soup.find_all("a", href=True):
 
     href = a["href"]
@@ -81,6 +81,7 @@ for page in pages:
                 # remove metadata
                 pdf.docinfo = {}
 
+                # remove XMP metadata
                 try:
                     pdf.Root.Metadata = None
                 except:
@@ -88,38 +89,17 @@ for page in pages:
 
                 root = pdf.Root
 
+                # remove open actions
                 if "/OpenAction" in root:
                     del root["/OpenAction"]
 
                 if "/AA" in root:
                     del root["/AA"]
 
-                # safe annotation cleaning
+                # remove annotations completely
                 for p in pdf.pages:
-
-                    annots = p.get("/Annots")
-
-                    if not annots:
-                        continue
-
-                    for annot in annots:
-
-                        try:
-
-                            # if indirect object
-                            if hasattr(annot, "get_object"):
-                                obj = annot.get_object()
-                            else:
-                                obj = annot
-
-                            if "/A" in obj:
-                                del obj["/A"]
-
-                            if "/URI" in obj:
-                                del obj["/URI"]
-
-                        except:
-                            pass
+                    if "/Annots" in p:
+                        del p["/Annots"]
 
                 pdf.save(save_path, linearize=True)
 
