@@ -5,6 +5,7 @@ on:
 
 jobs:
   scrape:
+
     runs-on: ubuntu-latest
 
     steps:
@@ -27,6 +28,6 @@ jobs:
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "actions@github.com"
-        git add pdf/*
-        git commit -m "Update PDFs" || echo "No changes"
+        git add pdf
+        git commit -m "Update PDFs" || echo "No new PDFs"
         git push
