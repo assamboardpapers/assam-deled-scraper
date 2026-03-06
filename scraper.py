@@ -10,7 +10,7 @@ ROOT_FOLDER = "pdf"
 
 os.makedirs(ROOT_FOLDER, exist_ok=True)
 
-# Load main page
+# load main page
 res = requests.get(MAIN)
 soup = BeautifulSoup(res.text, "html.parser")
 
@@ -19,7 +19,7 @@ pages = []
 for a in soup.find_all("a", href=True):
     href = a["href"]
     if "/papers/" in href and href.endswith(".html"):
-        pages.append(href)
+        pages.append(BASE + href)
 
 pages = list(set(pages))
 
@@ -44,14 +44,11 @@ for page in pages:
 
     parts = filename.split("-")
 
-    # class detect
     class_folder = f"{parts[0]}-{parts[1]}-{parts[2]}"
-
-    # year detect
     year = parts[-1].replace(".pdf", "")
 
-    year_folder = os.path.join(ROOT_FOLDER, year)
-    class_path = os.path.join(year_folder, class_folder)
+    year_path = os.path.join(ROOT_FOLDER, year)
+    class_path = os.path.join(year_path, class_folder)
 
     os.makedirs(class_path, exist_ok=True)
 
@@ -65,26 +62,27 @@ for page in pages:
 
     data = requests.get(pdf_link).content
 
-    temp = "temp.pdf"
+    temp_file = "temp.pdf"
 
-    with open(temp, "wb") as f:
+    with open(temp_file, "wb") as f:
         f.write(data)
 
     # clean pdf
-    with pikepdf.open(temp) as pdf:
+    with pikepdf.open(temp_file) as pdf:
 
         # remove metadata
-        pdf.docinfo.clear()
+        pdf.docinfo = {}
 
         root = pdf.Root
 
-        # remove redirect
+        # remove redirect actions
         if "/OpenAction" in root:
             del root["/OpenAction"]
 
         if "/AA" in root:
             del root["/AA"]
 
+        # remove link actions
         for page in pdf.pages:
             if "/Annots" in page:
                 annots = page["/Annots"]
@@ -95,6 +93,6 @@ for page in pages:
 
         pdf.save(save_path)
 
-    os.remove(temp)
+    os.remove(temp_file)
 
-print("Done")
+print("Scraping completed.")
