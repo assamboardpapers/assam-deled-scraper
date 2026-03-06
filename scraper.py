@@ -78,6 +78,7 @@ for page in pages:
 
             with pikepdf.open(temp_file) as pdf:
 
+                # remove metadata
                 pdf.docinfo = {}
 
                 root = pdf.Root
@@ -88,13 +89,24 @@ for page in pages:
                 if "/AA" in root:
                     del root["/AA"]
 
+                # remove annotations safely
                 for p in pdf.pages:
-                    if "/Annots" in p:
-                        annots = p["/Annots"]
-                        for annot in annots:
+
+                    annots = p.get("/Annots")
+
+                    if not annots:
+                        continue
+
+                    for annot in annots:
+
+                        try:
                             obj = annot.get_object()
+
                             if "/A" in obj:
                                 del obj["/A"]
+
+                        except:
+                            pass
 
                 pdf.save(save_path)
 
