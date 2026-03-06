@@ -18,8 +18,13 @@ pages = []
 
 for a in soup.find_all("a", href=True):
     href = a["href"]
+
     if "/papers/" in href and href.endswith(".html"):
-        pages.append(BASE + href)
+
+        if href.startswith("http"):
+            pages.append(href)
+        else:
+            pages.append(BASE + href)
 
 pages = list(set(pages))
 
@@ -27,72 +32,72 @@ print("Found pages:", len(pages))
 
 for page in pages:
 
-    r = requests.get(page)
-    soup = BeautifulSoup(r.text, "html.parser")
+    try:
+        r = requests.get(page, timeout=30)
+        soup = BeautifulSoup(r.text, "html.parser")
 
-    pdf_tag = soup.find("a", id="pyq-hide-1s")
+        pdf_tag = soup.find("a", id="pyq-hide-1s")
 
-    if not pdf_tag:
-        continue
+        if not pdf_tag:
+            continue
 
-    pdf_link = pdf_tag["href"]
+        pdf_link = pdf_tag["href"]
 
-    if not pdf_link.startswith("http"):
-        pdf_link = BASE + "/papers/" + pdf_link
+        if not pdf_link.startswith("http"):
+            pdf_link = BASE + "/papers/" + pdf_link
 
-    filename = pdf_link.split("/")[-1]
+        filename = pdf_link.split("/")[-1]
 
-    parts = filename.split("-")
+        parts = filename.split("-")
 
-    class_folder = f"{parts[0]}-{parts[1]}-{parts[2]}"
-    year = parts[-1].replace(".pdf", "")
+        class_folder = f"{parts[0]}-{parts[1]}-{parts[2]}"
+        year = parts[-1].replace(".pdf", "")
 
-    year_path = os.path.join(ROOT_FOLDER, year)
-    class_path = os.path.join(year_path, class_folder)
+        year_path = os.path.join(ROOT_FOLDER, year)
+        class_path = os.path.join(year_path, class_folder)
 
-    os.makedirs(class_path, exist_ok=True)
+        os.makedirs(class_path, exist_ok=True)
 
-    save_path = os.path.join(class_path, filename)
+        save_path = os.path.join(class_path, filename)
 
-    if os.path.exists(save_path):
-        print("Skip:", filename)
-        continue
+        if os.path.exists(save_path):
+            print("Skip:", filename)
+            continue
 
-    print("Downloading:", filename)
+        print("Downloading:", filename)
 
-    data = requests.get(pdf_link).content
+        data = requests.get(pdf_link, timeout=30).content
 
-    temp_file = "temp.pdf"
+        temp_file = "temp.pdf"
 
-    with open(temp_file, "wb") as f:
-        f.write(data)
+        with open(temp_file, "wb") as f:
+            f.write(data)
 
-    # clean pdf
-    with pikepdf.open(temp_file) as pdf:
+        with pikepdf.open(temp_file) as pdf:
 
-        # remove metadata
-        pdf.docinfo = {}
+            pdf.docinfo = {}
 
-        root = pdf.Root
+            root = pdf.Root
 
-        # remove redirect actions
-        if "/OpenAction" in root:
-            del root["/OpenAction"]
+            if "/OpenAction" in root:
+                del root["/OpenAction"]
 
-        if "/AA" in root:
-            del root["/AA"]
+            if "/AA" in root:
+                del root["/AA"]
 
-        # remove link actions
-        for page in pdf.pages:
-            if "/Annots" in page:
-                annots = page["/Annots"]
-                for annot in annots:
-                    obj = annot.get_object()
-                    if "/A" in obj:
-                        del obj["/A"]
+            for p in pdf.pages:
+                if "/Annots" in p:
+                    annots = p["/Annots"]
+                    for annot in annots:
+                        obj = annot.get_object()
+                        if "/A" in obj:
+                            del obj["/A"]
 
-        pdf.save(save_path)
+            pdf.save(save_path)
 
-    os.remove(temp_file)
+        os.remove(temp_file)
+
+    except Exception as e:
+        print("Error:", page, e)
 
 print("Scraping completed.")
