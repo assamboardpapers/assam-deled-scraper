@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>DELED Previous Year Papers</title><meta name="theme-color" content="#f5f7fa">
-<meta name="apple-mobile-web-app-status-bar-style" content="light">
-<meta name="msapplication-navbutton-color" content="#f5f7fa"><link rel="icon" type="image/png" href="favicon.png">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>DELED Previous Year Papers</title><meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="msapplication-navbutton-color" content="#0f172a"><link rel="icon" type="image/png" href="favicon.png">
 <link rel="shortcut icon" href="favicon.png">
 <link rel="apple-touch-icon" href="favicon.png"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><style>
 
@@ -180,10 +180,7 @@ gap:4px;
 .badge.sem3{background:#9333ea33;color:#c084fc;border:1px solid #a855f766}
 .badge.sem4{background:#ea580c33;color:#fb923c;border:1px solid #fb923c66}
 
-.btn{
-display:flex;
-gap:8px;
-}
+.btn{display:flex;gap:8px}
 
 .btn a{
 flex:1;
@@ -256,14 +253,21 @@ render(apiData)
 loadData()
 
 function getSemester(c){
+
 let m=c.match(/(\d)-sem/)
+
 return m?m[1]:null
+
 }
 
 function highlight(text,q){
+
 if(!q)return text
+
 let reg=new RegExp(`(${q})`,"gi")
+
 return text.replace(reg,"<mark>$1</mark>")
+
 }
 
 function createSemesterMenu(){
@@ -271,10 +275,15 @@ function createSemesterMenu(){
 let set=new Set()
 
 for(let y in apiData.years){
+
 apiData.years[y].forEach(p=>{
+
 let s=getSemester(p.class)
+
 if(s)set.add(parseInt(s))
+
 })
+
 }
 
 let arr=[...set].sort((a,b)=>a-b)
@@ -288,12 +297,19 @@ html+=`<div class="sem" data-sem="${s}">Semester ${s}</div>`
 semMenu.innerHTML=html
 
 document.querySelectorAll(".sem").forEach(el=>{
+
 el.onclick=function(){
+
 document.querySelectorAll(".sem").forEach(x=>x.classList.remove("active"))
+
 this.classList.add("active")
+
 currentSem=this.dataset.sem
+
 render(apiData)
+
 }
+
 })
 
 }
